@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛動物教室小幫手 - 低年級注音版</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入圓潤可愛的繁體中文字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+    <!-- 引入 Tone.js 產生可愛音效（免外部音檔） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', 'Noto Sans TC', sans-serif;
+            background-color: #FFF9EB;
+            background-image: radial-gradient(#FDE68A 1.5px, transparent 1.5px);
+            background-size: 28px 28px;
+            color: #451A03;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 注音符號直排樣式 (台灣標準注音排版) */
+        ruby {
+            ruby-align: center;
+        }
+        rt {
+            font-family: 'Noto Sans TC', sans-serif;
+            font-size: 0.45em;
+            font-weight: 700;
+            color: #9A3412;
+            letter-spacing: 0px;
+        }
+
+        /* 睡覺呼吸動畫 */
+        @keyframes breathe {
+            0%, 100% { transform: scale(1) translateY(0px); }
+            50% { transform: scale(1.05) translateY(-4px); }
+        }
+        .animal-sleeping {
+            animation: breathe 3.2s ease-in-out infinite;
+        }
+
+        /* 漂浮 Zzz 動畫 */
+        @keyframes floatZzz {
+            0% { opacity: 0; transform: translate(0, 0) scale(0.7); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translate(16px, -24px) scale(1.2); }
+        }
+        .zzz-1 { animation: floatZzz 2.6s infinite 0s; }
+        .zzz-2 { animation: floatZzz 2.6s infinite 0.8s; }
+        .zzz-3 { animation: floatZzz 2.6s infinite 1.6s; }
+
+        /* 嚇醒抖動動畫 */
+        @keyframes wakeShake {
+            0%, 100% { transform: rotate(0deg) scale(1.1); }
+            20% { transform: rotate(-12deg) scale(1.18); }
+            40% { transform: rotate(12deg) scale(1.18); }
+            60% { transform: rotate(-10deg) scale(1.15); }
+            80% { transform: rotate(10deg) scale(1.15); }
+        }
+        .animal-awake {
+            animation: wakeShake 0.45s ease-in-out infinite;
+        }
+
+        /* 卡片點擊彈跳 */
+        .cute-btn {
+            transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+        }
+        .cute-btn:active {
+            transform: scale(0.93);
+        }
+
+        /* 可愛捲軸 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #FEF3C7; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb { background: #F59E0B; border-radius: 99px; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col">
+
+    <!-- ==================== 頂部可愛導覽列 ==================== -->
+    <header class="bg-gradient-to-r from-amber-400 via-orange-300 to-amber-400 border-b-2 border-amber-500/60 px-3 py-1.5 shadow-2xs shrink-0">
+        <div class="max-w-[1700px] mx-auto flex items-center justify-between gap-2">
+            <!-- 左側：班級標題（含注音） -->
+            <div class="flex items-center gap-2">
+                <div class="bg-white p-1 rounded-xl shadow-2xs border-2 border-amber-500 text-lg leading-none">
+                    🐻
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h1 id="classTitleDisplay" onclick="openSettingsModal()" class="text-base sm:text-lg font-black text-amber-950 tracking-wide cursor-pointer hover:opacity-80 flex items-center gap-1.5">
+                        <span>快樂國小 一年甲班</span>
+                        <span class="text-[10px] bg-white/80 text-amber-900 px-1.5 py-0.5 rounded-full border border-amber-400 font-bold">改班名</span>
+                    </h1>
+                    <p id="dateDisplay" class="hidden sm:block text-amber-950/80 font-bold text-xs"></p>
+                </div>
+            </div>
+
+            <!-- 右側：功能按鈕 -->
+            <div class="flex items-center gap-1.5">
+                <button onclick="openNamesModal()" class="cute-btn bg-white hover:bg-amber-50 text-amber-900 font-black px-2.5 py-1 rounded-xl border-2 border-amber-500 shadow-2xs flex items-center gap-1 text-xs cursor-pointer">
+                    <span>👶</span>
+                    <span>編輯名單</span>
+                </button>
+                <button onclick="openSettingsModal()" class="cute-btn bg-amber-900/10 hover:bg-amber-900/20 text-amber-950 font-black p-1.5 rounded-xl border border-amber-600/30 cursor-pointer" title="班級設定">
+                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== 主畫面雙欄佈局（強制永遠左右並排、一屏零捲動） ==================== -->
+    <main class="flex-1 min-h-0 max-w-[1700px] w-full mx-auto p-2 grid grid-cols-12 gap-2">
+
+        <!-- ==================== 左欄 (佔 5 欄)：現在要做什麼 + 睡覺動物計時器 + 任務清單 ==================== -->
+        <div class="col-span-5 flex flex-col gap-2 min-h-0">
+
+            <!-- 1. 整合卡片：【現在要做的事】＋【睡覺動物安靜倒數計時器】 -->
+            <section id="timerCard" class="bg-white rounded-2xl border-3 border-sky-300 shadow-sm overflow-hidden transition-colors duration-300 shrink-0">
+                <!-- 計時器頂部列：切換小動物 -->
+                <div class="bg-sky-100/90 px-2.5 py-1 border-b border-sky-200 flex items-center justify-between">
+                    <div class="flex items-center gap-1 font-black text-sky-950 text-xs">
+                        <span>🤫</span>
+                        <span><ruby>安<rt>ㄢ</rt></ruby><ruby>靜<rt>ㄐㄧㄥˋ</rt></ruby><ruby>倒<rt>ㄉㄠˋ</rt></ruby><ruby>數<rt>ㄕㄨˇ</rt></ruby><ruby>計<rt>ㄐㄧˋ</rt></ruby><ruby>時<rt>ㄕˊ</rt></ruby></span>
+                    </div>
+                    <!-- 選擇睡覺的動物 -->
+                    <div class="flex items-center gap-0.5 bg-white/80 p-0.5 rounded-lg border border-sky-200">
+                        <button onclick="selectAnimal('bear')" id="animalBtn_bear" class="animal-select-btn px-1 rounded text-sm cursor-pointer" title="小熊">🐻</button>
+                        <button onclick="selectAnimal('cat')" id="animalBtn_cat" class="animal-select-btn px-1 rounded text-sm cursor-pointer" title="小貓">🐱</button>
+                        <button onclick="selectAnimal('bunny')" id="animalBtn_bunny" class="animal-select-btn px-1 rounded text-sm cursor-pointer" title="小兔">🐰</button>
+                    </div>
+                </div>
+
+                <!-- ★ 計時器正上方：現在要做的事情（大字注音看板） -->
+                <div class="bg-gradient-to-r from-amber-100 via-yellow-50 to-amber-100 border-b border-amber-200 px-2 py-1 text-center">
+                    <div class="inline-flex items-center gap-1 bg-amber-500 text-white text-[10px] font-black px-2 py-0.2 rounded-full">
+                        <span>🎯 現在要做的事</span>
+                    </div>
+                    <div id="currentFocusTaskDisplay" class="text-base sm:text-lg font-black text-amber-950 tracking-wide leading-tight pt-0.5 flex items-center justify-center flex-wrap">
+                        <!-- 由 JS 自動顯示目前進行中的注音任務 -->
+                    </div>
+                </div>
+
+                <!-- 睡覺動物舞台區 -->
+                <div class="p-2 flex flex-col items-center">
+                    <!-- 動物狀態提示氣泡 -->
+                    <div id="animalSpeechBubble" class="mb-0.5 px-2.5 py-0.5 rounded-lg bg-sky-50 border border-sky-200 text-sky-900 font-black text-[11px] text-center">
+                        小熊正在睡覺，請保持安靜喔！
+                    </div>
+
+                    <!-- 動物與倒數時間並排 -->
+                    <div class="flex items-center justify-center gap-3 my-0.5">
+                        <!-- 可愛動物舞台 -->
+                        <div class="relative flex items-center justify-center h-14 w-16">
+                            <div id="zzzContainer" class="absolute -top-1 right-0 font-black text-sky-500 select-none pointer-events-none">
+                                <span class="zzz-1 inline-block text-xs">Z</span>
+                                <span class="zzz-2 inline-block text-sm">z</span>
+                                <span class="zzz-3 inline-block text-base">z</span>
+                            </div>
+                            <div id="wakeAlertIcon" class="hidden absolute -top-2 right-0 text-xl animate-bounce">💢</div>
+
+                            <div id="animalAvatar" class="text-4xl sm:text-5xl animal-sleeping select-none cursor-pointer" onclick="triggerAnimalWakeUp()" title="點擊可模擬吵醒小動物">
+                                🐻
+                            </div>
+                        </div>
+
+                        <!-- 巨大倒數時間顯示 -->
+                        <div id="timerDisplay" class="text-3xl sm:text-4xl font-black tracking-wider text-sky-950 font-mono">
+                            05:00
+                        </div>
+                    </div>
+
+                    <!-- 快速設定時間按鈕：3、5、10、30 分鐘 -->
+                    <div class="flex flex-wrap justify-center gap-1 my-1">
+                        <button onclick="setTimerMinutes(3)" class="cute-btn bg-sky-100 hover:bg-sky-200 text-sky-900 font-black px-2 py-0.5 rounded-lg text-xs cursor-pointer">3分</button>
+                        <button onclick="setTimerMinutes(5)" class="cute-btn bg-sky-100 hover:bg-sky-200 text-sky-900 font-black px-2 py-0.5 rounded-lg text-xs cursor-pointer">5分</button>
+                        <button onclick="setTimerMinutes(10)" class="cute-btn bg-sky-100 hover:bg-sky-200 text-sky-900 font-black px-2 py-0.5 rounded-lg text-xs cursor-pointer">10分</button>
+                        <button onclick="setTimerMinutes(30)" class="cute-btn bg-sky-100 hover:bg-sky-200 text-sky-900 font-black px-2 py-0.5 rounded-lg text-xs cursor-pointer">30分</button>
+                    </div>
+
+                    <!-- 開始 / 暫停 / 重設 控制鈕 -->
+                    <div class="flex items-center gap-1.5 w-full max-w-[240px]">
+                        <button id="timerToggleBtn" onclick="toggleTimer()" class="cute-btn flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black py-1 px-2.5 rounded-xl shadow-2xs flex items-center justify-center gap-1 text-xs sm:text-sm cursor-pointer">
+                            <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                            <span>開始計時</span>
+                        </button>
+                        <button onclick="resetTimer()" class="cute-btn bg-stone-200 hover:bg-stone-300 text-stone-700 font-black py-1 px-2.5 rounded-xl cursor-pointer" title="重新設定時間">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+
+                    <!-- 音量偵測與扣分控制面板 -->
+                    <div class="w-full mt-1.5 pt-1.5 border-t border-dashed border-sky-200">
+                        <div class="flex items-center justify-between gap-1 mb-1">
+                            <button id="micToggleBtn" onclick="toggleMicrophone()" class="cute-btn bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-black px-1.5 py-0.5 rounded-lg text-[11px] flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="mic" class="w-3 h-3 text-rose-500"></i>
+                                <span id="micBtnText">麥克風偵測</span>
+                            </button>
+
+                            <button onclick="triggerAnimalWakeUp()" class="cute-btn bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 font-black px-1.5 py-0.5 rounded-lg text-[11px] cursor-pointer">
+                                📢 吵醒扣分！
+                            </button>
+                        </div>
+
+                        <!-- 即時音量條 -->
+                        <div class="bg-stone-100 rounded-full h-2 p-0.5 border border-stone-200 overflow-hidden relative">
+                            <div id="volumeBar" class="h-full rounded-full bg-emerald-400 transition-all duration-75" style="width: 5%;"></div>
+                            <div id="thresholdMarker" class="absolute top-0 bottom-0 w-0.5 bg-rose-600" style="left: 70%;" title="音量警戒線"></div>
+                        </div>
+                        <div class="flex items-center justify-between text-[10px] font-bold text-stone-500 mt-0.5">
+                            <span>安靜區</span>
+                            <div class="flex items-center gap-1">
+                                <span>靈敏度：</span>
+                                <input type="range" id="sensitivitySlider" min="30" max="95" value="70" oninput="updateSensitivity(this.value)" class="w-12 accent-rose-500 cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. 今日任務清單（點選可切換到上方計時器） -->
+            <section class="flex-1 min-h-0 bg-white rounded-2xl border-3 border-amber-300 shadow-sm flex flex-col overflow-hidden">
+                <div class="bg-amber-100/90 px-2.5 py-1 border-b border-amber-200 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-1 font-black text-amber-950 text-xs">
+                        <span>📝</span>
+                        <span><ruby>今<rt>ㄐㄧㄣ</rt></ruby><ruby>日<rt>ㄖˋ</rt></ruby><ruby>任<rt>ㄖㄣˋ</rt></ruby><ruby>務<rt>ㄨˋ</rt></ruby><ruby>清<rt>ㄑㄧㄥ</rt></ruby><ruby>單<rt>ㄉㄢ</rt></ruby></span>
+                    </div>
+                    <span class="text-[10px] font-bold bg-white text-amber-800 px-1.5 py-0.2 rounded-full border border-amber-300">點選任務 ☝️</span>
+                </div>
+
+                <div class="p-2 flex-1 min-h-0 flex flex-col gap-1.5">
+                    <!-- 新增任務表單 -->
+                    <form onsubmit="handleAddTask(event)" class="flex gap-1 shrink-0">
+                        <input type="text" id="newTaskInput" placeholder="新增任務..."
+                            class="flex-1 min-w-0 bg-amber-50/60 border border-amber-300 focus:border-amber-500 rounded-lg px-2 py-1 text-xs font-bold outline-none">
+                        <button type="submit" class="cute-btn bg-amber-500 hover:bg-amber-600 text-white font-black px-2.5 py-1 rounded-lg shrink-0 text-xs cursor-pointer">
+                            新增
+                        </button>
+                    </form>
+
+                    <!-- 常用低年級任務快速加入 -->
+                    <div class="flex flex-wrap items-center gap-1 shrink-0">
+                        <button type="button" onclick="quickAddTask('交聯絡簿')" class="text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold px-1.5 py-0.5 rounded cursor-pointer">+ 交聯絡簿</button>
+                        <button type="button" onclick="quickAddTask('喝水去廁所')" class="text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold px-1.5 py-0.5 rounded cursor-pointer">+ 喝水去廁所</button>
+                        <button type="button" onclick="quickAddTask('整理書包')" class="text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold px-1.5 py-0.5 rounded cursor-pointer">+ 整理書包</button>
+                        <button type="button" onclick="quickAddTask('安靜看書')" class="text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold px-1.5 py-0.5 rounded cursor-pointer">+ 安靜看書</button>
+                    </div>
+
+                    <!-- 任務清單容器 -->
+                    <div id="taskListContainer" class="flex-1 min-h-0 overflow-y-auto space-y-1 pr-0.5">
+                        <!-- 由 JS 動態渲染任務項目 -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== 右欄 (佔 7 欄)：小朋友姓名打卡單 ＆ 動物養成加分表 ==================== -->
+        <section class="col-span-7 bg-white rounded-2xl border-3 border-emerald-300 shadow-sm flex flex-col min-h-0 overflow-hidden">
+            <!-- 右欄頂部列：打卡統計與快速操作 -->
+            <div class="bg-emerald-100/90 px-3 py-1.5 border-b border-emerald-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">🌟</span>
+                    <h2 class="text-sm sm:text-base font-black text-emerald-950">
+                        <ruby>姓<rt>ㄒㄧㄥˋ</rt></ruby><ruby>名<rt>ㄇㄧㄥˊ</rt></ruby><ruby>打<rt>ㄉㄚˇ</rt></ruby><ruby>卡<rt>ㄎㄚˇ</rt></ruby>＆<ruby>動<rt>ㄉㄨㄥˋ</rt></ruby><ruby>物<rt>ㄨˋ</rt></ruby><ruby>養<rt>ㄧㄤˇ</rt></ruby><ruby>成<rt>ㄔㄥˊ</rt></ruby><ruby>加<rt>ㄐㄧㄚ</rt></ruby><ruby>分<rt>ㄈㄣ</rt></ruby>
+                    </h2>
+                    <span class="text-xs font-black bg-white text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300">
+                        全完成：<span id="checkedInCount">0</span> / <span id="totalStudentsCount">0</span>
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <button onclick="batchAdjustPoints(1)" class="cute-btn bg-amber-400 hover:bg-amber-500 text-amber-950 font-black px-2.5 py-1 rounded-lg text-xs shadow-2xs cursor-pointer">
+                        ⭐ 全班 +1
+                    </button>
+                    <button onclick="resetAllCheckins()" class="cute-btn bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 font-black px-2.5 py-1 rounded-lg text-xs cursor-pointer">
+                        🔄 重設打卡
+                    </button>
+                </div>
+            </div>
+
+            <!-- 小朋友姓名卡片網格 -->
+            <div class="p-2 flex-1 min-h-0 overflow-y-auto">
+                <div id="studentsGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-2">
+                    <!-- 由 JS 動態渲染小朋友卡片 -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== 吵醒小動物警示視窗 ==================== -->
+    <div id="wakeUpModal" class="fixed inset-0 bg-rose-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 border-4 border-rose-500 shadow-2xl text-center">
+            <div id="modalAnimalEmoji" class="text-6xl mb-2 animal-awake inline-block">🐻</div>
+            <h3 class="text-2xl font-black text-rose-600 mb-1">
+                <ruby>噓<rt>ㄒㄩ</rt></ruby>！<ruby>太<rt>ㄊㄞˋ</rt></ruby><ruby>大<rt>ㄉㄚˋ</rt></ruby><ruby>聲<rt>ㄕㄥ</rt></ruby><ruby>囉<rt>˙ㄌㄨㄛ</rt></ruby>！
+            </h3>
+            <p class="text-stone-700 font-bold text-sm sm:text-base mb-5">
+                <ruby>小<rt>ㄒㄧㄠˇ</rt></ruby><ruby>動<rt>ㄉㄨㄥˋ</rt></ruby><ruby>物<rt>ㄨˋ</rt></ruby><ruby>被<rt>ㄅㄟˋ</rt></ruby><ruby>吵<rt>ㄔㄠˇ</rt></ruby><ruby>醒<rt>ㄒㄧㄥˇ</rt></ruby><ruby>了<rt>˙ㄌㄜ</rt></ruby>！<ruby>要<rt>ㄧㄠˋ</rt></ruby><ruby>全<rt>ㄑㄩㄢˊ</rt></ruby><ruby>班<rt>ㄅㄢ</rt></ruby><ruby>扣<rt>ㄎㄡˋ</rt></ruby> 1 <ruby>顆<rt>ㄎㄜ</rt></ruby><ruby>星<rt>ㄒㄧㄥ</rt></ruby><ruby>星<rt>ㄒㄧㄥ</rt></ruby><ruby>嗎<rt>˙ㄇㄚ</rt></ruby>？
+            </p>
+            <div class="flex gap-2.5">
+                <button onclick="dismissWakeUpModal()" class="cute-btn flex-1 bg-stone-200 hover:bg-stone-300 text-stone-800 font-black py-2.5 rounded-2xl text-sm cursor-pointer">
+                    先原諒大家
+                </button>
+                <button onclick="confirmWakeUpPenalty()" class="cute-btn flex-1 bg-rose-500 hover:bg-rose-600 text-white font-black py-2.5 rounded-2xl text-sm shadow-xs cursor-pointer">
+                    全班扣 1⭐
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 個人任務與動物養成視窗 ==================== -->
+    <div id="studentDetailModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 border-4 border-emerald-400 shadow-2xl">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span id="detailPetAvatar" class="text-4xl">🥚</span>
+                    <div>
+                        <h3 id="detailStudentName" class="text-xl sm:text-2xl font-black text-stone-800">小朋友名字</h3>
+                        <p id="detailPetStageName" class="text-xs font-black text-amber-700 bg-amber-100 inline-block px-2 py-0.5 rounded-full">
+                            神秘小蛋蛋（Lv.1）
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="bg-amber-100 border-2 border-amber-300 px-3 py-1 rounded-2xl font-black text-amber-800 text-base flex items-center gap-1">
+                        <span>⭐</span>
+                        <span id="detailStudentPoints">0</span>
+                    </div>
+                    <button onclick="closeModal('studentDetailModal')" class="text-stone-400 hover:text-stone-600 p-1 cursor-pointer">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 動物養成進化路線展示 -->
+            <div class="bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-3 mb-4">
+                <div id="detailPetTrack" class="flex items-center justify-between gap-1 text-xl sm:text-2xl mb-1.5">
+                    <!-- JS 動態渲染進化階段 -->
+                </div>
+                <p id="detailPetNextHint" class="text-xs font-bold text-amber-900 text-center">
+                    再集滿幾顆星星就會進化喔！
+                </p>
+            </div>
+
+            <!-- 個人任務清單（點選打勾自動加 1 分） -->
+            <div class="mb-2 flex items-center justify-between">
+                <span class="text-sm font-black text-stone-700">
+                    📋 <ruby>點<rt>ㄉㄧㄢˇ</rt></ruby><ruby>選<rt>ㄒㄩㄢˇ</rt></ruby><ruby>完<rt>ㄨㄢˊ</rt></ruby><ruby>成<rt>ㄔㄥˊ</rt></ruby>（每完成 1 項自動 +1⭐）
+                </span>
+                <span id="detailTaskProgressText" class="text-xs font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    0 / 0 完成
+                </span>
+            </div>
+
+            <div id="detailTaskList" class="space-y-2 max-h-60 overflow-y-auto pr-1 mb-4">
+                <!-- JS 動態渲染該生各項任務狀態 -->
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="closeModal('studentDetailModal')" class="cute-btn w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-2.5 rounded-2xl shadow-2xs text-base cursor-pointer">
+                    完成並返回看板
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 編輯小朋友名單視窗 ==================== -->
+    <div id="namesModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-amber-400 shadow-2xl">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xl font-black text-amber-950 flex items-center gap-2">
+                    <span>👶</span>
+                    <span>編輯全班小朋友名單</span>
+                </h3>
+                <button onclick="closeModal('namesModal')" class="text-stone-400 hover:text-stone-600 p-1 cursor-pointer">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <p class="text-xs sm:text-sm text-stone-600 font-bold mb-3">
+                請輸入全班小朋友的名字（<strong>一行一個名字</strong>，可從 Excel 或名單直接複製貼上，系統不會顯示座號）：
+            </p>
+            <textarea id="namesTextarea" rows="10" placeholder="王小明&#10;陳小美&#10;林小華&#10;張小玉"
+                class="w-full bg-amber-50/50 border-2 border-amber-300 focus:border-amber-500 rounded-2xl p-3.5 text-base font-bold outline-none leading-relaxed"></textarea>
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeModal('namesModal')" class="px-4 py-2 rounded-xl font-bold text-stone-600 hover:bg-stone-100 cursor-pointer">取消</button>
+                <button onclick="saveStudentNames()" class="cute-btn px-5 py-2 rounded-xl font-black bg-amber-500 hover:bg-amber-600 text-white shadow-xs cursor-pointer">儲存名單</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 班級設定視窗 ==================== -->
+    <div id="settingsModal" class="fixed inset-0 bg-stone-900/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 border-4 border-amber-400 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-black text-amber-950">⚙️ 教室小幫手設定</h3>
+                <button onclick="closeModal('settingsModal')" class="text-stone-400 hover:text-stone-600 p-1 cursor-pointer">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-black text-stone-700 mb-1">班級名稱</label>
+                    <input type="text" id="settingClassInput" class="w-full border-2 border-amber-300 rounded-2xl px-4 py-2.5 font-bold outline-none">
+                </div>
+                <div class="flex items-center justify-between p-3 bg-amber-50 rounded-2xl border border-amber-200">
+                    <span class="font-bold text-stone-800 text-sm">開啟可愛音效（打卡/加分/鬧鐘）</span>
+                    <input type="checkbox" id="settingSoundCheckbox" checked class="w-5 h-5 accent-amber-500 cursor-pointer">
+                </div>
+                <div class="pt-2 border-t border-stone-100 flex justify-between items-center">
+                    <button onclick="resetAllScores()" class="text-xs font-bold text-rose-600 hover:underline cursor-pointer">將全班分數歸零</button>
+                    <button onclick="restoreDemo()" class="text-xs font-bold text-stone-500 hover:underline cursor-pointer">恢復範例名單</button>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="closeModal('settingsModal')" class="px-4 py-2 rounded-xl font-bold text-stone-600 hover:bg-stone-100 cursor-pointer">取消</button>
+                    <button onclick="saveSettings()" class="cute-btn px-5 py-2 rounded-xl font-black bg-amber-500 hover:bg-amber-600 text-white cursor-pointer">儲存設定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部可愛浮動通知 -->
+    <div id="toastBox" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+    <script>
+        // ==================== 1. 低年級常用國字注音字典（自動標註注音） ====================
+        const ZHUYIN_DICT = {
+            '今': 'ㄐㄧㄣ', '日': 'ㄖˋ', '要': 'ㄧㄠˋ', '做': 'ㄗㄨㄛˋ', '的': 'ㄉㄜ˙', '事': 'ㄕˋ',
+            '交': 'ㄐㄧㄠ', '聯': 'ㄌㄧㄢˊ', '絡': 'ㄌㄨㄛˋ', '簿': 'ㄅㄨˋ', '訂': 'ㄉㄧㄥˋ', '正': 'ㄓㄥˋ',
+            '習': 'ㄒㄧˊ', '作': 'ㄗㄨㄛˋ', '喝': 'ㄏㄜ', '水': 'ㄕㄨㄟˇ', '去': 'ㄑㄩˋ', '廁': 'ㄘㄜˋ',
+            '所': 'ㄙㄨㄛˇ', '整': 'ㄓㄥˇ', '理': 'ㄌㄧˇ', '抽': 'ㄔㄡ', '屜': 'ㄊㄧˋ', '書': 'ㄕㄨ',
+            '包': 'ㄅㄠ', '安': 'ㄢ', '靜': 'ㄐㄧㄥˋ', '看': 'ㄎㄢˋ', '課': 'ㄎㄜˋ', '外': 'ㄨㄞˋ',
+            '國': 'ㄍㄨㄛˊ', '語': 'ㄩˇ', '數': 'ㄕㄨˋ', '學': 'ㄒㄩㄝˊ', '生': 'ㄕㄥ', '字': 'ㄗˋ',
+            '甲': 'ㄐㄧㄚˇ', '乙': 'ㄧˇ', '本': 'ㄅㄣˇ', '回': 'ㄏㄨㄟˊ', '條': 'ㄊㄧㄠˊ', '通': 'ㄊㄨㄥ',
+            '知': 'ㄓ', '單': 'ㄉㄢ', '掃': 'ㄙㄠˇ', '地': 'ㄉㄧˋ', '擦': 'ㄘㄚ', '黑': 'ㄏㄟ',
+            '板': 'ㄅㄢˇ', '桌': 'ㄓㄨㄛ', '椅': 'ㄧˇ', '排': 'ㄆㄞˊ', '隊': 'ㄉㄨㄟˋ', '吃': 'ㄔ',
+            '飯': 'ㄈㄢˋ', '午': 'ㄨˇ', '休': 'ㄒㄧㄡ', '睡': 'ㄕㄨㄟˋ', '覺': 'ㄐㄧㄠˋ', '收': 'ㄕㄡ',
+            '好': 'ㄏㄠˇ', '文': 'ㄨㄣˊ', '具': 'ㄐㄩˋ', '鉛': 'ㄑㄧㄢ', '筆': 'ㄅㄧˇ', '橡': 'ㄒㄧㄤˋ',
+            '皮': 'ㄆㄧˊ', '準': 'ㄓㄨㄣˇ', '備': 'ㄅㄟˋ', '上': 'ㄕㄤˋ', '下': 'ㄒㄧㄚˋ', '放': 'ㄈㄤˋ',
+            '畫': 'ㄏㄨㄚˋ', '圖': 'ㄊㄨˊ', '朗': 'ㄌㄤˇ', '讀': 'ㄉㄨˊ', '背': 'ㄅㄟˋ', '考': 'ㄎㄠˇ',
+            '試': 'ㄕˋ', '卷': 'ㄐㄩㄢˋ', '簽': 'ㄑㄧㄢ', '名': 'ㄇㄧㄥˊ', '帶': 'ㄉㄞˋ', '餐': 'ㄘㄢ',
+            '袋': 'ㄉㄞˋ', '刷': 'ㄕㄨㄚ', '牙': 'ㄧㄚˊ', '洗': 'ㄒㄧˇ', '手': 'ㄕㄡˇ', '完': 'ㄨㄢˊ',
+            '成': 'ㄔㄥˊ', '請': 'ㄑㄧㄥˇ', '打': 'ㄉㄚˇ', '卡': 'ㄎㄚˇ', '寫': 'ㄒㄧㄝˇ', '功': 'ㄍㄨㄥ'
+        };
+
+        // 將文字轉換為帶有 <ruby> 注音的 HTML
+        function toZhuyinHtml(text) {
+            return Array.from(text).map(char => {
+                if (ZHUYIN_DICT[char]) {
+                    return `<ruby>${char}<rt>${ZHUYIN_DICT[char]}</rt></ruby>`;
+                }
+                return escapeHtml(char);
+            }).join('');
+        }
+
+        // ==================== 2. 狀態管理與預設資料 ====================
+        const STORAGE_KEY = 'cute_low_grade_classroom_v1';
+
+        const ANIMALS = {
+            bear: { emoji: '🐻', name: '小熊' },
+            cat: { emoji: '🐱', name: '小貓' },
+            bunny: { emoji: '🐰', name: '小兔' }
+        };
+
+        // 動物養成進化路線表（依個人星星分數進化）
+        const PET_TRACKS = [
+            { name: '恐龍寶寶系', stages: ['🥚', '🐣', '🦖', '🦕', '🐉'] },
+            { name: '獨角獸系',   stages: ['🥚', '🐣', '🐴', '🦄', '🧚'] },
+            { name: '草原獅王系', stages: ['🥚', '🐣', '🐱', '🦁', '👑'] },
+            { name: '極地企鵝系', stages: ['🥚', '🐣', '🐥', '🐧', '🐳'] },
+            { name: '森林小狐系', stages: ['🥚', '🐣', '🐶', '🦊', '🐺'] },
+            { name: '海洋海龜系', stages: ['🥚', '🐣', '🐸', '🐢', '🐬'] }
+        ];
+
+        const STAGE_LABELS = [
+            { min: 0, label: '神秘小蛋蛋' },
+            { min: 2, label: '破殼小寶寶' },
+            { min: 5, label: '可愛成長期' },
+            { min: 8, label: '帥氣進階期' },
+            { min: 12, label: '👑 傳說守護神獸' }
+        ];
+
+        function getPetEvolutionInfo(student) {
+            const trackIdx = (student.petTrackIndex ?? 0) % PET_TRACKS.length;
+            const track = PET_TRACKS[trackIdx];
+            const pts = student.points || 0;
+
+            let level = 0;
+            if (pts >= 12) level = 4;
+            else if (pts >= 8) level = 3;
+            else if (pts >= 5) level = 2;
+            else if (pts >= 2) level = 1;
+            else level = 0;
+
+            const nextThresholds = [2, 5, 8, 12, null];
+            const nextPts = nextThresholds[level];
+
+            return {
+                track,
+                level,
+                emoji: track.stages[level],
+                stageLabel: STAGE_LABELS[level].label,
+                nextPts,
+                ptsNeeded: nextPts !== null ? Math.max(0, nextPts - pts) : 0
+            };
+        }
+
+        const DEFAULT_DATA = {
+            className: '快樂國小 一年甲班',
+            soundEnabled: true,
+            selectedAnimal: 'bear',
+            sensitivity: 70,
+            activeTaskId: 't1',
+            tasks: [
+                { id: 't1', text: '交聯絡簿和國語習作' },
+                { id: 't2', text: '喝水去廁所' },
+                { id: 't3', text: '安靜看課外書' }
+            ],
+            students: [
+                { id: 's1', name: '王小明', petTrackIndex: 0, completedTasks: ['t1', 't2', 't3'], points: 5 },
+                { id: 's2', name: '陳小美', petTrackIndex: 1, completedTasks: ['t1', 't2'], points: 2 },
+                { id: 's3', name: '林宇軒', petTrackIndex: 2, completedTasks: [], points: 0 },
+                { id: 's4', name: '張芷若', petTrackIndex: 3, completedTasks: ['t1', 't2', 't3'], points: 8 },
+                { id: 's5', name: '李承恩', petTrackIndex: 4, completedTasks: ['t1'], points: 1 },
+                { id: 's6', name: '黃品妍', petTrackIndex: 5, completedTasks: ['t1', 't2', 't3'], points: 12 },
+                { id: 's7', name: '吳宥廷', petTrackIndex: 0, completedTasks: [], points: 0 },
+                { id: 's8', name: '蔡語彤', petTrackIndex: 1, completedTasks: ['t1', 't2'], points: 3 },
+                { id: 's9', name: '許睿哲', petTrackIndex: 2, completedTasks: ['t1'], points: 1 },
+                { id: 's10', name: '鄭羽希', petTrackIndex: 3, completedTasks: ['t1', 't2', 't3'], points: 6 },
+                { id: 's11', name: '謝秉翰', petTrackIndex: 4, completedTasks: [], points: 0 },
+                { id: 's12', name: '郭子晴', petTrackIndex: 5, completedTasks: ['t1', 't2'], points: 4 }
+            ]
+        };
+
+        let appData = loadData();
+        let activeDetailStudentId = null;
+
+        function loadData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+                const parsed = JSON.parse(raw);
+                const merged = { ...JSON.parse(JSON.stringify(DEFAULT_DATA)), ...parsed };
+                // 相容舊資料格式
+                merged.students = (merged.students || []).map((s, idx) => ({
+                    ...s,
+                    petTrackIndex: s.petTrackIndex ?? (idx % PET_TRACKS.length),
+                    completedTasks: Array.isArray(s.completedTasks) ? s.completedTasks : (s.checkedIn ? (merged.tasks || []).map(t => t.id) : [])
+                }));
+                return merged;
+            } catch (e) {
+                return JSON.parse(JSON.stringify(DEFAULT_DATA));
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ==================== 3. 可愛音效合成 (Tone.js) ====================
+        function playSound(type) {
+            if (!appData.soundEnabled || typeof Tone === 'undefined') return;
+            try {
+                if (Tone.context.state !== 'running') Tone.start();
+                const synth = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.01, decay: 0.15, sustain: 0.05, release: 0.2 }
+                }).toDestination();
+
+                const now = Tone.now();
+                if (type === 'checkin') {
+                    synth.triggerAttackRelease('C5', '16n', now);
+                    synth.triggerAttackRelease('E5', '16n', now + 0.08);
+                    synth.triggerAttackRelease('G5', '8n', now + 0.16);
+                } else if (type === 'pointUp') {
+                    synth.triggerAttackRelease('G5', '16n', now);
+                    synth.triggerAttackRelease('C6', '8n', now + 0.09);
+                } else if (type === 'alarm') {
+                    synth.triggerAttackRelease('A3', '8n', now);
+                    synth.triggerAttackRelease('F3', '4n', now + 0.15);
+                } else if (type === 'finish') {
+                    synth.triggerAttackRelease('C5', '8n', now);
+                    synth.triggerAttackRelease('E5', '8n', now + 0.15);
+                    synth.triggerAttackRelease('G5', '8n', now + 0.3);
+                    synth.triggerAttackRelease('C6', '4n', now + 0.45);
+                }
+            } catch (e) {
+                // 忽略瀏覽器自動播放限制錯誤
+            }
+        }
+
+        // ==================== 4. 睡覺動物倒數計時器 & 麥克風偵測 ====================
+        let totalSeconds = 300; // 預設 5 分鐘
+        let remainingSeconds = 300;
+        let timerInterval = null;
+        let isRunning = false;
+        let isAnimalAwake = false;
+
+        // 麥克風相關變數
+        let audioContext = null;
+        let analyser = null;
+        let micStream = null;
+        let micAnimFrame = null;
+        let isMicOn = false;
+        let loudFrames = 0; // 連續太大聲的幀數，避免瞬間雜音誤判
+
+        function selectAnimal(key) {
+            appData.selectedAnimal = key;
+            saveData();
+            updateAnimalUI();
+        }
+
+        function updateAnimalUI() {
+            const animal = ANIMALS[appData.selectedAnimal] || ANIMALS.bear;
+            document.querySelectorAll('.animal-select-btn').forEach(btn => {
+                btn.classList.remove('bg-sky-200', 'ring-2', 'ring-sky-400');
+            });
+            const activeBtn = document.getElementById(`animalBtn_${appData.selectedAnimal}`);
+            if (activeBtn) activeBtn.classList.add('bg-sky-200', 'ring-2', 'ring-sky-400');
+
+            const avatarEl = document.getElementById('animalAvatar');
+            const bubbleEl = document.getElementById('animalSpeechBubble');
+            const zzzEl = document.getElementById('zzzContainer');
+            const alertEl = document.getElementById('wakeAlertIcon');
+            const cardEl = document.getElementById('timerCard');
+
+            avatarEl.textContent = animal.emoji;
+            document.getElementById('modalAnimalEmoji').textContent = animal.emoji;
+
+            if (isAnimalAwake) {
+                avatarEl.className = 'text-4xl sm:text-5xl animal-awake select-none cursor-pointer';
+                bubbleEl.className = 'mb-0.5 px-2.5 py-0.5 rounded-lg bg-rose-100 border border-rose-400 text-rose-800 font-black text-[11px] text-center animate-pulse';
+                bubbleEl.textContent = `吼！太大聲把${animal.name}吵醒了！`;
+                zzzEl.classList.add('hidden');
+                alertEl.classList.remove('hidden');
+                cardEl.classList.replace('border-sky-300', 'border-rose-500');
+            } else {
+                avatarEl.className = 'text-4xl sm:text-5xl animal-sleeping select-none cursor-pointer';
+                bubbleEl.className = 'mb-0.5 px-2.5 py-0.5 rounded-lg bg-sky-50 border border-sky-200 text-sky-900 font-black text-[11px] text-center';
+                bubbleEl.textContent = isRunning
+                    ? `${animal.name}正在睡覺，請保持安靜喔！`
+                    : `點「開始計時」，讓${animal.name}陪大家！`;
+                zzzEl.classList.remove('hidden');
+                alertEl.classList.add('hidden');
+                cardEl.classList.replace('border-rose-500', 'border-sky-300');
+            }
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function setTimerMinutes(mins) {
+            pauseTimer();
+            isAnimalAwake = false;
+            totalSeconds = mins * 60;
+            remainingSeconds = totalSeconds;
+            document.getElementById('timerDisplay').textContent = formatTime(remainingSeconds);
+            updateAnimalUI();
+        }
+
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (remainingSeconds <= 0) remainingSeconds = totalSeconds;
+            isRunning = true;
+            isAnimalAwake = false;
+            updateAnimalUI();
+
+            const btn = document.getElementById('timerToggleBtn');
+            btn.className = 'cute-btn flex-1 bg-amber-500 hover:bg-amber-600 text-white font-black py-1.5 px-3 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 text-sm sm:text-base cursor-pointer';
+            btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4 fill-current"></i><span>暫停計時</span>`;
+            lucide.createIcons();
+
+            timerInterval = setInterval(() => {
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    document.getElementById('timerDisplay').textContent = formatTime(remainingSeconds);
+                } else {
+                    pauseTimer();
+                    playSound('finish');
+                    showToast('🎉 時間到囉！大家表現得很棒！');
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            updateAnimalUI();
+
+            const btn = document.getElementById('timerToggleBtn');
+            btn.className = 'cute-btn flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-black py-1.5 px-3 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 text-sm sm:text-base cursor-pointer';
+            btn.innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i><span>開始計時</span>`;
+            lucide.createIcons();
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            isAnimalAwake = false;
+            remainingSeconds = totalSeconds;
+            document.getElementById('timerDisplay').textContent = formatTime(remainingSeconds);
+            updateAnimalUI();
+        }
+
+        // 觸發吵醒小動物事件
+        function triggerAnimalWakeUp() {
+            if (isAnimalAwake) return;
+            isAnimalAwake = true;
+            loudFrames = 0;
+            playSound('alarm');
+            updateAnimalUI();
+
+            const modal = document.getElementById('wakeUpModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function confirmWakeUpPenalty() {
+            batchAdjustPoints(-1);
+            dismissWakeUpModal();
+        }
+
+        function dismissWakeUpModal() {
+            isAnimalAwake = false;
+            updateAnimalUI();
+            closeModal('wakeUpModal');
+        }
+
+        // 麥克風即時音量偵測
+        async function toggleMicrophone() {
+            if (isMicOn) {
+                stopMicrophone();
+                return;
+            }
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(micStream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+
+                isMicOn = true;
+                document.getElementById('micBtnText').textContent = '關閉音量偵測';
+                document.getElementById('micToggleBtn').classList.replace('bg-amber-100', 'bg-rose-100');
+                showToast('🎤 已開啟麥克風音量偵測！');
+                monitorVolume();
+            } catch (err) {
+                showToast('⚠️ 無法開啟麥克風，可使用右側手動按鈕喔！');
+            }
+        }
+
+        function stopMicrophone() {
+            isMicOn = false;
+            if (micAnimFrame) cancelAnimationFrame(micAnimFrame);
+            if (micStream) {
+                micStream.getTracks().forEach(t => t.stop());
+                micStream = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            document.getElementById('micBtnText').textContent = '開啟麥克風抓大聲公';
+            document.getElementById('micToggleBtn').classList.replace('bg-rose-100', 'bg-amber-100');
+            document.getElementById('volumeBar').style.width = '5%';
+            document.getElementById('volumeBar').className = 'h-full rounded-full bg-emerald-400 transition-all duration-75';
+        }
+
+        function monitorVolume() {
+            if (!isMicOn || !analyser) return;
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(dataArray);
+
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+            }
+            const avg = sum / dataArray.length;
+            const level = Math.min(100, Math.round((avg / 128) * 100));
+
+            const bar = document.getElementById('volumeBar');
+            bar.style.width = `${Math.max(5, level)}%`;
+
+            const threshold = parseInt(appData.sensitivity || 70, 10);
+            if (level >= threshold) {
+                bar.className = 'h-full rounded-full bg-rose-500 transition-all duration-75';
+                if (isRunning && !isAnimalAwake) {
+                    loudFrames++;
+                    if (loudFrames > 15) {
+                        triggerAnimalWakeUp();
+                    }
+                }
+            } else if (level >= threshold * 0.7) {
+                bar.className = 'h-full rounded-full bg-amber-400 transition-all duration-75';
+                loudFrames = Math.max(0, loudFrames - 1);
+            } else {
+                bar.className = 'h-full rounded-full bg-emerald-400 transition-all duration-75';
+                loudFrames = Math.max(0, loudFrames - 1);
+            }
+
+            micAnimFrame = requestAnimationFrame(monitorVolume);
+        }
+
+        function updateSensitivity(val) {
+            appData.sensitivity = parseInt(val, 10);
+            document.getElementById('thresholdMarker').style.left = `${val}%`;
+            saveData();
+        }
+
+        // ==================== 5. 今日要做的事（附注音，並同步至計時器上方） ====================
+        function getActiveTask() {
+            if (!appData.tasks || appData.tasks.length === 0) return null;
+            let found = appData.tasks.find(t => t.id === appData.activeTaskId);
+            if (!found) {
+                found = appData.tasks[0];
+                appData.activeTaskId = found.id;
+            }
+            return found;
+        }
+
+        function setActiveTask(id) {
+            appData.activeTaskId = id;
+            saveData();
+            renderTasks();
+            const task = getActiveTask();
+            if (task) {
+                showToast(`🎯 已切換現在任務：「${task.text}」`);
+            }
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('taskListContainer');
+            const focusDisplay = document.getElementById('currentFocusTaskDisplay');
+            const activeTask = getActiveTask();
+
+            // 同步更新計時器正上方的「現在要做的事」大看板
+            if (activeTask) {
+                focusDisplay.innerHTML = toZhuyinHtml(activeTask.text);
+            } else {
+                focusDisplay.innerHTML = `<span class="text-amber-700/60 text-lg font-bold">請在下方新增或點選任務</span>`;
+            }
+
+            if (!appData.tasks || appData.tasks.length === 0) {
+                container.innerHTML = `<div class="text-center py-5 text-stone-400 font-bold text-sm">目前沒有任務，點上方快速加入吧！</div>`;
+                return;
+            }
+
+            container.innerHTML = appData.tasks.map((task, idx) => {
+                const isActive = activeTask && task.id === activeTask.id;
+                const cardStyle = isActive
+                    ? 'bg-amber-200/80 border-amber-500 shadow-2xs'
+                    : 'bg-amber-50/70 border-amber-200 hover:border-amber-400';
+
+                return `
+                    <div class="group flex items-center justify-between gap-1.5 border-2 rounded-xl px-2 py-1 transition ${cardStyle}">
+                        <div onclick="setActiveTask('${task.id}')" class="flex-1 flex items-center gap-1.5 cursor-pointer min-w-0" title="點擊放到計時器上方">
+                            <span class="w-5 h-5 rounded-full ${isActive ? 'bg-amber-600 text-white' : 'bg-amber-300 text-amber-950'} font-black text-[11px] flex items-center justify-center shrink-0">
+                                ${isActive ? '🎯' : idx + 1}
+                            </span>
+                            <div class="text-sm sm:text-base font-black text-stone-800 tracking-wide pt-0.5 truncate">
+                                ${toZhuyinHtml(task.text)}
+                            </div>
+                        </div>
+                        <button onclick="deleteTask('${task.id}')" class="text-stone-400 hover:text-rose-500 p-0.5 rounded transition cursor-pointer shrink-0" title="刪除任務">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function handleAddTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('newTaskInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const newId = 't_' + Date.now();
+            appData.tasks.push({ id: newId, text });
+            appData.activeTaskId = newId; // 新增時自動設為目前計時器上的任務
+            input.value = '';
+            saveData();
+            renderTasks();
+        }
+
+        function quickAddTask(text) {
+            const newId = 't_' + Date.now();
+            appData.tasks.push({ id: newId, text });
+            appData.activeTaskId = newId;
+            saveData();
+            renderTasks();
+            renderStudents();
+        }
+
+        function deleteTask(id) {
+            appData.tasks = appData.tasks.filter(t => t.id !== id);
+            // 同步從每位小朋友的已完成清單中移除已刪除的任務 ID
+            appData.students.forEach(s => {
+                if (Array.isArray(s.completedTasks)) {
+                    s.completedTasks = s.completedTasks.filter(tid => tid !== id);
+                }
+            });
+            if (appData.activeTaskId === id) {
+                appData.activeTaskId = appData.tasks[0]?.id || null;
+            }
+            saveData();
+            renderTasks();
+            renderStudents();
+        }
+
+        // ==================== 6. 小朋友姓名打卡單 ＆ 動物養成加分表 ====================
+        function renderStudents() {
+            const grid = document.getElementById('studentsGrid');
+            const students = appData.students || [];
+            const tasks = appData.tasks || [];
+            const totalTasks = tasks.length;
+
+            // 計算「全部任務都完成」的人數
+            const allDoneStudentsCount = students.filter(s => {
+                if (totalTasks === 0) return false;
+                const doneIds = (s.completedTasks || []).filter(tid => tasks.some(t => t.id === tid));
+                return doneIds.length >= totalTasks;
+            }).length;
+
+            document.getElementById('checkedInCount').textContent = allDoneStudentsCount;
+            document.getElementById('totalStudentsCount').textContent = students.length;
+
+            if (students.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-stone-400 font-bold">尚未建立名單，請點擊右上角「編輯名單」</div>`;
+                return;
+            }
+
+            grid.innerHTML = students.map(student => {
+                const doneIds = (student.completedTasks || []).filter(tid => tasks.some(t => t.id === tid));
+                const doneCount = doneIds.length;
+                const isAllDone = totalTasks > 0 && doneCount >= totalTasks;
+                const pet = getPetEvolutionInfo(student);
+
+                const cardClass = isAllDone
+                    ? 'bg-emerald-50 border-emerald-400 shadow-2xs'
+                    : doneCount > 0
+                        ? 'bg-amber-50/50 border-amber-300 hover:border-amber-400'
+                        : 'bg-white border-stone-200 hover:border-amber-300';
+
+                return `
+                    <div class="relative rounded-xl border-2 p-1.5 flex flex-col justify-between transition ${cardClass}">
+                        <!-- 上半部：點擊可打開「個人任務清單視窗」查看未完成任務並打卡 -->
+                        <div onclick="openStudentDetailModal('${student.id}')" class="cursor-pointer flex flex-col items-center text-center pt-0.5 pb-1" title="點擊查看未完成任務與打卡">
+                            <!-- 左上角：進化等級小標籤 -->
+                            <div class="w-full flex items-center justify-between px-0.5 mb-0.5">
+                                <span class="text-[9px] font-black px-1 py-0.2 rounded bg-amber-100 text-amber-900">
+                                    Lv.${pet.level + 1}
+                                </span>
+                                <!-- 右上角：任務完成進度徽章 -->
+                                ${isAllDone
+                                    ? '<span class="inline-flex items-center bg-emerald-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">✅ 全完成</span>'
+                                    : `<span class="inline-flex items-center bg-stone-100 text-stone-600 text-[9px] font-black px-1.5 py-0.2 rounded-full border border-stone-200">${doneCount}/${totalTasks}</span>`
+                                }
+                            </div>
+
+                            <!-- 養成型動物頭貼（從蛋開始隨分數進化） -->
+                            <div class="text-2xl sm:text-3xl my-0.5 transition-transform hover:scale-110 ${pet.level >= 4 ? 'drop-shadow-xs' : ''}">
+                                ${pet.emoji}
+                            </div>
+
+                            <!-- 小朋友姓名（大字顯示，無座號） -->
+                            <div class="text-sm sm:text-base font-black tracking-wide leading-tight ${isAllDone ? 'text-emerald-950' : 'text-stone-800'}">
+                                ${escapeHtml(student.name)}
+                            </div>
+                        </div>
+
+                        <!-- 下半部：個人加分集點列 -->
+                        <div class="pt-1 border-t border-stone-200/80 flex items-center justify-between gap-0.5">
+                            <button onclick="adjustStudentPoint('${student.id}', -1)" class="cute-btn w-5 h-5 rounded bg-stone-100 hover:bg-rose-100 text-stone-500 hover:text-rose-600 font-black text-xs flex items-center justify-center cursor-pointer" title="扣 1 分">
+                                -
+                            </button>
+
+                            <div class="flex items-center gap-0.5 font-black text-amber-600 text-xs sm:text-sm" title="${pet.stageLabel}">
+                                <span>⭐</span>
+                                <span>${student.points}</span>
+                            </div>
+
+                            <button onclick="adjustStudentPoint('${student.id}', 1)" class="cute-btn px-1.5 h-5 rounded bg-amber-400 hover:bg-amber-500 text-amber-950 font-black text-[11px] flex items-center justify-center shadow-2xs cursor-pointer" title="加 1 分">
+                                +1
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 打開小朋友個人任務視窗
+        function openStudentDetailModal(studentId) {
+            activeDetailStudentId = studentId;
+            renderStudentDetailModal();
+            const modal = document.getElementById('studentDetailModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function renderStudentDetailModal() {
+            const student = appData.students.find(s => s.id === activeDetailStudentId);
+            if (!student) return;
+
+            const tasks = appData.tasks || [];
+            const doneSet = new Set(student.completedTasks || []);
+            const pet = getPetEvolutionInfo(student);
+
+            document.getElementById('detailStudentName').textContent = student.name;
+            document.getElementById('detailPetAvatar').textContent = pet.emoji;
+            document.getElementById('detailPetStageName').textContent = `${pet.stageLabel}（Lv.${pet.level + 1}）`;
+            document.getElementById('detailStudentPoints').textContent = student.points;
+
+            // 進化階段進度圖示
+            document.getElementById('detailPetTrack').innerHTML = pet.track.stages.map((emoji, idx) => {
+                const unlocked = idx <= pet.level;
+                return `<span class="px-1.5 py-0.5 rounded-lg ${idx === pet.level ? 'bg-amber-300 scale-110 shadow-2xs' : unlocked ? 'bg-white' : 'opacity-35 grayscale'}">${emoji}</span>`;
+            }).join('<span class="text-xs text-stone-400">➔</span>');
+
+            document.getElementById('detailPetNextHint').textContent = pet.nextPts !== null
+                ? `再集滿 ${pet.ptsNeeded} 顆星星（共 ${pet.nextPts} 分），就會進化成下一階段喔！`
+                : '🎉 太厲害了！已經進化成最高等級的傳說守護神獸！';
+
+            const doneCount = tasks.filter(t => doneSet.has(t.id)).length;
+            document.getElementById('detailTaskProgressText').textContent = `${doneCount} / ${tasks.length} 完成`;
+
+            const listEl = document.getElementById('detailTaskList');
+            if (tasks.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-6 text-stone-400 font-bold text-sm">目前還沒有設定今日任務喔！</div>`;
+            } else {
+                listEl.innerHTML = tasks.map(task => {
+                    const isDone = doneSet.has(task.id);
+                    return `
+                        <div onclick="toggleStudentTaskItem('${student.id}', '${task.id}')"
+                            class="cute-btn flex items-center justify-between gap-3 p-3 rounded-2xl border-2 cursor-pointer transition ${
+                                isDone
+                                    ? 'bg-emerald-50 border-emerald-400 text-emerald-950'
+                                    : 'bg-rose-50/60 border-rose-200 hover:border-amber-400 text-stone-800'
+                            }">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="w-7 h-7 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
+                                    isDone ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-rose-300 text-rose-500'
+                                }">
+                                    ${isDone ? '✓' : '!'}
+                                </span>
+                                <div class="text-base sm:text-lg font-black pt-1 ${isDone ? 'line-through opacity-70' : ''}">
+                                    ${toZhuyinHtml(task.text)}
+                                </div>
+                            </div>
+                            <span class="shrink-0 text-xs font-black px-2.5 py-1 rounded-xl ${
+                                isDone
+                                    ? 'bg-emerald-200/80 text-emerald-900'
+                                    : 'bg-rose-500 text-white shadow-2xs'
+                            }">
+                                ${isDone ? '已完成 +1⭐' : '還沒做 ☝️'}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // 點擊個人視窗內的單一任務：自動切換完成狀態並同步加/減 1 分，檢查是否進化！
+        function toggleStudentTaskItem(studentId, taskId) {
+            const student = appData.students.find(s => s.id === studentId);
+            if (!student) return;
+
+            if (!Array.isArray(student.completedTasks)) student.completedTasks = [];
+            const prevPet = getPetEvolutionInfo(student);
+            const idx = student.completedTasks.indexOf(taskId);
+
+            if (idx === -1) {
+                // 完成任務 -> 自動加 1 分！
+                student.completedTasks.push(taskId);
+                student.points = (student.points || 0) + 1;
+                const newPet = getPetEvolutionInfo(student);
+
+                if (newPet.level > prevPet.level) {
+                    playSound('finish');
+                    showToast(`🎊 哇！${student.name} 的小動物進化成 ${newPet.emoji} ${newPet.stageLabel} 啦！`);
+                } else {
+                    playSound('checkin');
+                    showToast(`👏 ${student.name} 完成任務，自動獲得 1 顆星星 ⭐！`);
+                }
+            } else {
+                // 取消完成 -> 扣回 1 分
+                student.completedTasks.splice(idx, 1);
+                student.points = Math.max(0, (student.points || 0) - 1);
+            }
+
+            saveData();
+            renderStudentDetailModal();
+            renderStudents();
+        }
+
+        function adjustStudentPoint(id, delta) {
+            const student = appData.students.find(s => s.id === id);
+            if (!student) return;
+            const prevPet = getPetEvolutionInfo(student);
+            student.points = Math.max(0, (student.points || 0) + delta);
+            const newPet = getPetEvolutionInfo(student);
+
+            if (delta > 0) {
+                if (newPet.level > prevPet.level) {
+                    playSound('finish');
+                    showToast(`🎊 恭喜 ${student.name} 進化成 ${newPet.emoji} ${newPet.stageLabel}！`);
+                } else {
+                    playSound('pointUp');
+                    showToast(`⭐ ${student.name} 加 1 顆星星！`);
+                }
+            }
+            saveData();
+            renderStudents();
+            if (activeDetailStudentId === id) {
+                renderStudentDetailModal();
+            }
+        }
+
+        function batchAdjustPoints(delta) {
+            appData.students.forEach(s => {
+                s.points = Math.max(0, (s.points || 0) + delta);
+            });
+            if (delta > 0) {
+                playSound('pointUp');
+                showToast('🎉 全班每人加 1 顆星星！');
+            } else {
+                showToast('💤 吵醒小動物，全班每人扣 1 顆星星！');
+            }
+            saveData();
+            renderStudents();
+        }
+
+        function resetAllCheckins() {
+            appData.students.forEach(s => {
+                s.completedTasks = [];
+            });
+            saveData();
+            renderStudents();
+            showToast('🔄 已重設所有小朋友今日的任務打卡狀態（星星分數保留）');
+        }
+
+        // ==================== 7. 名單編輯與設定視窗 ====================
+        function openNamesModal() {
+            const namesText = appData.students.map(s => s.name).join('\n');
+            document.getElementById('namesTextarea').value = namesText;
+            const modal = document.getElementById('namesModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function saveStudentNames() {
+            const raw = document.getElementById('namesTextarea').value;
+            const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length === 0) {
+                showToast('請至少輸入一位小朋友的名字喔！');
+                return;
+            }
+
+            // 保留同名小朋友原有的分數、完成紀錄與進化路線
+            const oldMap = new Map(appData.students.map(s => [s.name, s]));
+            appData.students = lines.map((name, idx) => {
+                if (oldMap.has(name)) {
+                    return oldMap.get(name);
+                }
+                return {
+                    id: 's_' + Date.now() + '_' + idx,
+                    name: name,
+                    petTrackIndex: idx % PET_TRACKS.length,
+                    completedTasks: [],
+                    points: 0
+                };
+            });
+
+            saveData();
+            closeModal('namesModal');
+            renderStudents();
+            showToast(`✅ 已更新全班 ${appData.students.length} 位小朋友名單！`);
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingClassInput').value = appData.className;
+            document.getElementById('settingSoundCheckbox').checked = appData.soundEnabled;
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function saveSettings() {
+            const newName = document.getElementById('settingClassInput').value.trim();
+            if (newName) appData.className = newName;
+            appData.soundEnabled = document.getElementById('settingSoundCheckbox').checked;
+            saveData();
+            closeModal('settingsModal');
+            renderHeader();
+            showToast('設定已儲存！');
+        }
+
+        function resetAllScores() {
+            appData.students.forEach(s => s.points = 0);
+            saveData();
+            renderStudents();
+            closeModal('settingsModal');
+            showToast('已將全班星星分數歸零');
+        }
+
+        function restoreDemo() {
+            appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            saveData();
+            closeModal('settingsModal');
+            initApp();
+            showToast('已恢復範例名單與資料');
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        // ==================== 8. 輔助函式與初始化 ====================
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function showToast(msg) {
+            const box = document.getElementById('toastBox');
+            const el = document.createElement('div');
+            el.className = 'bg-amber-950 text-amber-50 font-black px-5 py-2.5 rounded-2xl shadow-lg text-sm sm:text-base border-2 border-amber-400 transition-all duration-300';
+            el.textContent = msg;
+            box.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 300);
+            }, 2200);
+        }
+
+        function renderHeader() {
+            document.getElementById('classTitleDisplay').querySelector('span').textContent = appData.className;
+            const now = new Date();
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+            document.getElementById('dateDisplay').textContent =
+                `民國 ${now.getFullYear() - 1911} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日（星期${weekDays[now.getDay()]}）`;
+        }
+
+        function initApp() {
+            renderHeader();
+            document.getElementById('sensitivitySlider').value = appData.sensitivity || 70;
+            document.getElementById('thresholdMarker').style.left = `${appData.sensitivity || 70}%`;
+            updateAnimalUI();
+            renderTasks();
+            renderStudents();
+            lucide.createIcons();
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
